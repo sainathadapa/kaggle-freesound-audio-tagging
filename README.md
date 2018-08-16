@@ -99,7 +99,7 @@ While I haven't ran exhaustive trials to say for sure, anecdotally, each of the 
 ## Training
 Ten folds (stratified split as there is class imbalance) were generated. For each fold, a model of similar architecture but that uses only Log Mel-Spectrogram data is trained. The weights from this model are loaded into the whole model (that uses both mel and pca features), and training process continues. Attempt to train the model without using this two-stage approach didn't result in as good a model as before.
 
-## Test time data augmentation
+## Predictions on test data
 Six different lengths selected at equal intervals between the 25th and 75th percentile of train file lengths. To make use of the higher amount of information present in longer length samples, at each length, predictions are generated five times. Each time a random span of specified length is extracted from longer (than specified length) length samples. 10 (folds) x 6 (lengths) x 5 (tries) gives 300 sets of predictions for the test data. All of these predictions were combined using geometric mean, and top 3 predicted classes for each data point are selected for submission.
 
 # Reproducing the results
