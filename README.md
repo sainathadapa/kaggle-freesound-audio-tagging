@@ -104,36 +104,3 @@ Six different lengths selected at equal intervals between the 25th and 75th perc
 
 # Reproducing the results
 Download and keep the data files in the `./data/` folder and run the bash script `./run_all.sh`. Script was tested on `Ubuntu 16.04`.
-
-# Miscellaneous
-
-## Git-LFS
-Although I was initially skeptical about Git-LFS, I'm completely sold out on the idea and the tech after using it for this competition. With Git-LFS, I was able to able to easily transfer model weights and other data files between my desktop and cloud instances. I could overwrite files carefree, avoiding weird file names, knowing that I can always restore previous files using the familiar git commands.
-
-## A note about using Mix-up
-Mixup can implemented in the following fashion:
-
-1. Take the train data {X_1, y_1}
-2. Shuffle the train data order to create another set {X_2, y_2}
-3. Sample values (as many as number of data points in the train set) from Beta distribution α
-4. Mixup `X = α*X_1 + (1-α)*X_2`, `y = α*y_1 + (1-α)*y_2`
-5. Do this for each epoch
-
-I needed a Batch version of Mixup, one that does not assume all the training data is available while computing the Mixup. I altered the original Mixup version for batch use case, by replacing the training set with batch:
-
-1. Take the current batch {X_b_1, y_b_1}
-2. Shuffle the train data order to create another set {X_b_2, y_b_2}
-3. Sample values (as many as data points in the batch) from Beta distribution α
-4. Mixup `X = α*X_b_1 + (1-α)*X_b_2`, `y = α*y_b_1 + (1-α)*y_b_2`
-
-Surprisingly, this method resulted in training loss reaching to unbelievably low values, while validation loss is similar to the values that I observed using the original Mixup algorithm. The model is being trained as before, as evidenced by validation losses being similar to original case's val losses, but training metrics are altered for some reason. My reasoning for the low training losses: After Mixup, the disimilarity between the data points in the batch is reduced, and so the training loss for each batch will also be lower than before.
-
-Since the data is shuffled before each epoch, different sets of pairs of data points are being Mixed-up every epoch. Hence this way of doing Mixup within a batch is still valid, except for the fact that training losses and other metrics calculated on the training data should be ignored. The validation metrics are untouched, correct and can be used for training stoppage.
-
-But if we want to use training metrics, we can resolve the issue by selecting a different set of points for Mixup (as opposed to points in the same batch).
-
-1. At each epoch, pair each point in the training set with some random point chosen from the training set. Save this mapping: {(i_1, i_2)}
-2. Take the current batch {X_b_1, y_b_1}, corresponding to indices i_b_1
-3. Find the indices i_b_2 corresponding to i_b_1, using the mapping {(i_1, i_2)}. Create the batch {X_b_2, y_b_2} using the i_b_2 indices
-4. Sample values (as many as data points in the batch) from Beta distribution α
-5. Mixup `X = α*X_b_1 + (1-α)*X_b_2`, `y = α*y_b_1 + (1-α)*y_b_2`
